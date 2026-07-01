@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "node index.js"
+    "dev": "node --watch index.js",
+    "dev:worker": "node --watch worker.js"
   },
   "keywords": [],
   "author": "",
@@ -18,10 +19,16 @@
   },
   "type": "module",
   "dependencies": {
+    "@langchain/community": "^1.1.29",
+    "@langchain/core": "^1.2.1",
+    "@langchain/openai": "^1.5.3",
+    "@langchain/qdrant": "^1.0.3",
     "@types/node": "^26.0.1",
     "bullmq": "^5.79.2",
     "cors": "^2.8.6",
-    "multer": "^2.2.0"
+    "langchain": "^1.5.2",
+    "multer": "^2.2.0",
+    "pdf-parse": "^2.4.5"
   },
   "devDependencies": {
     "@types/express": "~5.0.6",

@@ -1,0 +1,32 @@
+import { Worker } from "bullmq";
+import { QdrantVectorStore } from "@langchain/qdrant";
+import { OpenAIEmbeddings } from "@langchain/openai";
+import  { Document } from "@langchain/core/documents";
+import { PDFLoader } from "@langchain/community/document_loaders/fs/pdf";
+
+const worker = new Worker(
+  "file-upload-queue",
+  async (job) => {
+    console.log(`Job: ${job.id}`);
+    const data = JSON.parse(job.data);
+
+
+    
+  },
+  {
+    concurrency: 100,
+    connection: {
+      host: "localhost",
+      port: "6379",
+    },
+  },
+);
+
+
+/*Path :data.path
+read the pdf from path,
+chunk the pdf,
+call the openai embedding model for every chunk,
+store the chunk in quandt db
+
+*/
