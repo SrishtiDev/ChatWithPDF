@@ -22,6 +22,7 @@ const worker = new Worker(
       chunkOverlap: 0,
     });
     const texts = splitter.splitText(document);
+    console.log(`Number of chunks: ${texts.length}`);
   },
   {
     concurrency: 100,
