@@ -3,6 +3,7 @@ import { QdrantVectorStore } from "@langchain/qdrant";
 import { OpenAIEmbeddings } from "@langchain/openai";
 import  { Document } from "@langchain/core/documents";
 import { PDFLoader } from "@langchain/community/document_loaders/fs/pdf";
+import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 
 const worker = new Worker(
   "file-upload-queue",
@@ -11,7 +12,16 @@ const worker = new Worker(
     const data = JSON.parse(job.data);
 
 
-    
+    //Load the PDF file from the specified path
+    const loader = new PDFLoader(data.path);
+    const docs = await loader.load();
+
+    //Chunk the PDF into smaller pieces
+    const splitter = new RecursiveCharacterTextSplitter({
+      chunkSize: 300,
+      chunkOverlap: 0,
+    });
+    const texts = splitter.splitText(document);
   },
   {
     concurrency: 100,

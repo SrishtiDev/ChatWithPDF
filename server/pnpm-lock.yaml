@@ -219,6 +219,9 @@ importers:
       '@langchain/qdrant':
         specifier: ^1.0.3
         version: 1.0.3(@langchain/core@1.2.1(openai@6.45.0(ws@8.21.0)(zod@4.4.3))(ws@8.21.0))(typescript@6.0.3)
+      '@langchain/textsplitters':
+        specifier: ^1.0.1
+        version: 1.0.1(@langchain/core@1.2.1(openai@6.45.0(ws@8.21.0)(zod@4.4.3))(ws@8.21.0))
       '@types/node':
         specifier: ^26.0.1
         version: 26.0.1
