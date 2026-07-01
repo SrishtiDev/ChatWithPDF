@@ -28,11 +28,6 @@ const worker = new Worker(
 
       console.log(`Chunks: ${splitDocs.length}`);
 
-
-      // const embeddings = new OpenAIEmbeddings({
-      //   model: "text-embedding-3-small",
-      //   openAIApiKey: process.env.OPENAI_API_KEY,
-      // });
     const embeddings = new GoogleGenerativeAIEmbeddings({
       apiKey: process.env.GOOGLE_API_KEY,
       model: "gemini-embedding-001",
