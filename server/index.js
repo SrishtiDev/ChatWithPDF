@@ -5,6 +5,9 @@ import multer from "multer";
 import { Queue } from "bullmq";
 import { QdrantVectorStore } from "@langchain/qdrant";
 import { GoogleGenerativeAIEmbeddings } from "@langchain/google-genai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
+
+const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
 
 const queue = new Queue("file-upload-queue", {
   connection: {
@@ -93,7 +96,23 @@ app.get("/chat", async (req, res) => {
     // "userQuery" se quotes hata diye taaki variable use ho
     const results = await retriever.invoke(userQuery);
 
-    return res.json({ results });
+    const SYSTEM_PROMPT = `You are a helpful assistant that answers questions based on the provided context. If the answer is not in the context, say "I don't know."
+    CONTEXT:${JSON.stringify(results)}`;
+    
+    const model = genAI.getGenerativeModel({
+      model: "gemini-1.5-flash",
+    });
+
+    const response = await model.generateContent(
+      `${SYSTEM_PROMPT}\n\nUser Question: ${userQuery}`,
+    );
+
+    const answer = response.response.text();
+
+    return res.json({
+      results,
+      answer,
+    });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error: error.message });
