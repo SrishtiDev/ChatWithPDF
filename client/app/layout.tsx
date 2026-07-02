@@ -30,23 +30,45 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className="dark">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[#0a0a0f] text-zinc-100`}
       >
         <ClerkProvider>
-          <header className="flex justify-end items-center p-4 gap-4 h-16">
-            <Show when="signed-out">
-              <SignInButton />
-              <SignUpButton>
-                <button className="bg-[#6c47ff] text-white rounded-full font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 cursor-pointer">
-                  Sign Up
-                </button>
-              </SignUpButton>
-            </Show>
-            <Show when="signed-in">
-              <UserButton />
-            </Show>
+          <header className="flex items-center justify-between border-b border-zinc-800/60 bg-[#0a0a0f] px-6 py-3">
+            {/* Left side — brand */}
+            <div className="flex items-center gap-2">
+              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-violet-500 to-purple-600">
+                <span className="text-[10px] font-bold text-white">P</span>
+              </div>
+              <span className="text-sm font-medium text-zinc-400">PDF RAG</span>
+            </div>
+
+            {/* Right side — auth */}
+            <div className="flex items-center gap-3">
+              <Show when="signed-out">
+                <SignInButton>
+                  <button className="rounded-lg border border-zinc-700/50 px-3.5 py-1.5 text-xs text-zinc-400 transition-colors hover:border-zinc-600 hover:text-zinc-300">
+                    Sign In
+                  </button>
+                </SignInButton>
+                <SignUpButton>
+                  <button className="rounded-lg bg-violet-500 px-3.5 py-1.5 text-xs font-medium text-white transition-colors hover:bg-violet-600">
+                    Sign Up
+                  </button>
+                </SignUpButton>
+              </Show>
+              <Show when="signed-in">
+                <UserButton
+                  appearance={{
+                    elements: {
+                      userButtonAvatarBox: "h-7 w-7",
+                      userButtonTrigger: "outline-none",
+                    },
+                  }}
+                />
+              </Show>
+            </div>
           </header>
           {children}
         </ClerkProvider>
