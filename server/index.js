@@ -52,7 +52,7 @@ app.post("/upload/pdf", upload.single("pdf"), async (req, res) => {
 // CHAT ROUTE (Pure Approach B - LangChain)
 app.get("/chat", async (req, res) => {
   try {
-    const userQuery = "What are skills?";
+    const userQuery = req.query.message;
 
     // 1. Embeddings Initialize kiye
     const embeddings = new GoogleGenerativeAIEmbeddings({
