@@ -4,10 +4,10 @@ import cors from "cors";
 import multer from "multer";
 import { Queue } from "bullmq";
 import { QdrantVectorStore } from "@langchain/qdrant";
-import { GoogleGenerativeAIEmbeddings } from "@langchain/google-genai";
-import { GoogleGenerativeAI } from "@google/generative-ai";
-
-const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
+import {
+  GoogleGenerativeAIEmbeddings,
+  ChatGoogleGenerativeAI,
+} from "@langchain/google-genai"; // <-- Chat model import kiya
 
 const queue = new Queue("file-upload-queue", {
   connection: {
@@ -20,18 +20,14 @@ const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, "uploads/");
   },
-
   filename: function (req, file, cb) {
     const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-
     cb(null, `${uniqueSuffix}-${file.originalname}`);
   },
 });
 
 const upload = multer({ storage });
-
 const app = express();
-
 app.use(cors());
 
 app.get("/", (req, res) => {
@@ -53,34 +49,18 @@ app.post("/upload/pdf", upload.single("pdf"), async (req, res) => {
   });
 });
 
-// app.get("/chat", (req, res) => {
-//   const userQuery = "What is validator?";
-//    const embeddings = new GoogleGenerativeAIEmbeddings({
-//       apiKey: process.env.GOOGLE_API_KEY,
-//       model: "gemini-embedding-001",
-//     });
-//    const vectorStore = await QdrantVectorStore.fromDocuments(splitDocs, embeddings, {
-//    url: process.env.QDRANT_URL,
-//    collectionName: "langchainjs-testing",
-//  });
-//  const retriever = vectorStore.asRetriever({
-//   filter: filter,
-//   k: 2,
-// });
-// const results = await retriever.invoke("userQuery");
-// });
-// 1. Function ke aage async lagaya (req, res) se pehle
+// CHAT ROUTE (Pure Approach B - LangChain)
 app.get("/chat", async (req, res) => {
   try {
     const userQuery = "What are skills?";
 
+    // 1. Embeddings Initialize kiye
     const embeddings = new GoogleGenerativeAIEmbeddings({
       apiKey: process.env.GOOGLE_API_KEY,
       model: "gemini-embedding-001",
     });
 
-    // NOTE: Yahan vectorStore ko fromDocuments se dubara create karne ki zaroorat nahi hai.
-    // Hum sirf Qdrant se connect kar rahe hain query karne ke liye!
+    // 2. Qdrant Existing Collection se connect kiya
     const vectorStore = await QdrantVectorStore.fromExistingCollection(
       embeddings,
       {
@@ -90,31 +70,45 @@ app.get("/chat", async (req, res) => {
     );
 
     const retriever = vectorStore.asRetriever({
-      k: 2, // Agar extra filter variable nahi hai toh use hata do
+      k: 2,
     });
 
-    // "userQuery" se quotes hata diye taaki variable use ho
+    // 3. Vector DB se relevant context nikala
     const results = await retriever.invoke(userQuery);
 
+    // Document contents ko text format mein merge kiya context ke liye
+    const contextText = results.map((doc) => doc.pageContent).join("\n\n");
+
     const SYSTEM_PROMPT = `You are a helpful assistant that answers questions based on the provided context. If the answer is not in the context, say "I don't know."
-    CONTEXT:${JSON.stringify(results)}`;
     
-    const model = genAI.getGenerativeModel({
-      model: "gemini-1.5-flash",
-    });
+CONTEXT:
+${contextText}`;
 
-    const response = await model.generateContent(
-      `${SYSTEM_PROMPT}\n\nUser Question: ${userQuery}`,
-    );
+    // 4. LangChain ka Chat Model use kiya (No direct SDK!)
+    // const model = new ChatGoogleGenerativeAI({
+    //   apiKey: process.env.GOOGLE_API_KEY,
+    //   modelName: "gemini-1.5-flash", // LangChain wrapper automatic endpoints setup handle karega
+    //   maxOutputTokens: 2048,
+    // });
+const model = new ChatGoogleGenerativeAI({
+  apiKey: process.env.GOOGLE_API_KEY,
+  model: "gemini-3.5-flash",
+});
+    // 5. Model invoke kiya LangChain standard prompts array format mein
+    const response = await model.invoke([
+      ["system", SYSTEM_PROMPT],
+      ["human", userQuery],
+    ]);
 
-    const answer = response.response.text();
+    // LangChain response ek object hota hai jisme text .content property mein hota hai
+    const answer = response.content;
 
     return res.json({
       results,
       answer,
     });
   } catch (error) {
-    console.error(error);
+    console.error("Chat Error:", error);
     return res.status(500).json({ error: error.message });
   }
 });
